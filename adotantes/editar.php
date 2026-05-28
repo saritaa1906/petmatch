@@ -1,150 +1,82 @@
 <?php
+session_start();
+
+if(!isset($_SESSION['usuario'])){
+    header("Location: ../login.php");
+    exit();
+}
 
 include '../config/conexao.php';
 
 $id = $_GET['id'];
 
-$sql = "SELECT * FROM adotantes WHERE id = $id";
-
-$resultado = mysqli_query($conn, $sql);
-
+// Busca os dados do adotante
+$query = "SELECT * FROM adotantes WHERE id = $id";
+$resultado = mysqli_query($conn, $query);
 $adotante = mysqli_fetch_assoc($resultado);
 
-if(isset($_POST['editar'])){
-
+if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $nome = $_POST['nome'];
     $email = $_POST['email'];
-    $telefone = $_POST['telefone'];
-    $cpf = $_POST['cpf'];
-    $endereco = $_POST['endereco'];
 
-    $update = "UPDATE adotantes SET
-
-        nome='$nome',
-        email='$email',
-        telefone='$telefone',
-        cpf='$cpf',
-        endereco='$endereco'
-
-        WHERE id=$id";
-
-    mysqli_query($conn, $update);
-
-    header("Location: listar.php");
+    $sql = "UPDATE adotantes SET nome='$nome', email='$email' WHERE id=$id";
+    
+    if(mysqli_query($conn, $sql)){
+        header("Location: listar.php");
+        exit();
+    } else {
+        $erro = "Erro ao atualizar: " . mysqli_error($conn);
+    }
 }
-
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
-
-<meta charset="UTF-8">
-
-<title>Editar Adotante</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<style>
-
-body{
-    background:#0D0D0D;
-    color:white;
-}
-
-.card{
-    background:#151515;
-    border:none;
-    border-radius:20px;
-    color:white;
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <title>Editar Adotante - PetMatch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #0D0D0D; color: white; font-family: 'Segoe UI', sans-serif; }
+        .container-custom { max-width: 600px; margin: 50px auto; }
+        .page-header { border-bottom: 2px solid #0A3D91; padding-bottom: 15px; margin-bottom: 30px; text-align: center;}
+        .page-header h2 { margin: 0; font-weight: bold; color: #f8f9fa; }
+        .page-header h2 span { color: #4A90E2; }
+        .form-wrapper { background: #151515; border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(10, 61, 145, 0.15); }
+        .form-label { color: #ccc; font-weight: 500;}
+        .form-control { background-color: #1a1a1a; border: 1px solid #333; color: white; border-radius: 8px;}
+        .form-control:focus { background-color: #222; border-color: #4A90E2; box-shadow: 0 0 10px rgba(74, 144, 226, 0.3); color: white;}
+        .btn-salvar { background: #0A3D91; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-weight: bold; width: 100%; transition: 0.3s; }
+        .btn-salvar:hover { background: #4A90E2; color: white; }
+        .btn-voltar { background: #222; color: white; border: 1px solid #444; border-radius: 8px; padding: 10px 20px; text-decoration: none; width: 100%; display: block; text-align: center; margin-top: 10px; transition: 0.3s; }
+        .btn-voltar:hover { background: #333; color: white; }
+    </style>
 </head>
-
 <body>
 
-<div class="container mt-5">
+<div class="container container-custom">
+    <div class="page-header">
+        <h2>👤 Editar <span>Adotante #<?php echo $adotante['id']; ?></span></h2>
+    </div>
 
-    <div class="card p-5">
+    <div class="form-wrapper">
+        <?php if(isset($erro)) echo "<div class='alert alert-danger'>$erro</div>"; ?>
 
-        <h2 class="mb-4">✏ Editar Adotante</h2>
-
-        <form method="POST">
-
+        <form method="POST" action="">
             <div class="mb-3">
-
-                <label>Nome</label>
-
-                <input 
-                type="text"
-                name="nome"
-                class="form-control"
-                value="<?php echo $adotante['nome']; ?>">
-
-            </div>
-
-            <div class="mb-3">
-
-                <label>Email</label>
-
-                <input 
-                type="email"
-                name="email"
-                class="form-control"
-                value="<?php echo $adotante['email']; ?>">
-
-            </div>
-
-            <div class="mb-3">
-
-                <label>Telefone</label>
-
-                <input 
-                type="text"
-                name="telefone"
-                class="form-control"
-                value="<?php echo $adotante['telefone']; ?>">
-
-            </div>
-
-            <div class="mb-3">
-
-                <label>CPF</label>
-
-                <input 
-                type="text"
-                name="cpf"
-                class="form-control"
-                value="<?php echo $adotante['cpf']; ?>">
-
+                <label class="form-label">Nome Completo</label>
+                <input type="text" name="nome" class="form-control" value="<?php echo $adotante['nome']; ?>" required>
             </div>
 
             <div class="mb-4">
-
-                <label>Endereço</label>
-
-                <textarea 
-                name="endereco"
-                class="form-control"><?php echo $adotante['endereco']; ?></textarea>
-
+                <label class="form-label">E-mail de Contato</label>
+                <input type="email" name="email" class="form-control" value="<?php echo $adotante['email']; ?>" required>
             </div>
 
-            <button 
-            type="submit"
-            name="editar"
-            class="btn btn-warning">
-
-                Atualizar
-
-            </button>
-
+            <button type="submit" class="btn-salvar">Salvar Alterações</button>
+            <a href="listar.php" class="btn-voltar">Cancelar e Voltar</a>
         </form>
-
     </div>
-
 </div>
 
 </body>
